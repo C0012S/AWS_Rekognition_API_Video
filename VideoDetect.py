@@ -195,6 +195,44 @@ class VideoDetect:
         self.sqs.delete_queue(QueueUrl=self.sqsQueueUrl)
         self.sns.delete_topic(TopicArn=self.snsTopicArn)
 
+#Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#PDX-License-Identifier: MIT-0 (For details, see https://github.com/awsdocs/amazon-rekognition-developer-guide/blob/master/LICENSE-SAMPLECODE.)
+
+    # ============== Faces===============
+    def StartFaceDetection(self):
+        response=self.rek.start_face_detection(Video={'S3Object': {'Bucket': self.bucket, 'Name': self.video}},
+            NotificationChannel={'RoleArn': self.roleArn, 'SNSTopicArn': self.snsTopicArn})
+
+        self.startJobId=response['JobId']
+        print('Start Job Id: ' + self.startJobId)
+
+    def GetFaceDetectionResults(self):
+        maxResults = 10
+        paginationToken = ''
+        finished = False
+
+        while finished == False:
+            response = self.rek.get_face_detection(JobId=self.startJobId,
+                                            MaxResults=maxResults,
+                                            NextToken=paginationToken)
+
+            print('Codec: ' + response['VideoMetadata']['Codec'])
+            print('Duration: ' + str(response['VideoMetadata']['DurationMillis']))
+            print('Format: ' + response['VideoMetadata']['Format'])
+            print('Frame rate: ' + str(response['VideoMetadata']['FrameRate']))
+            print()
+
+            for faceDetection in response['Faces']:
+                print('Face: ' + str(faceDetection['Face']))
+                print('Confidence: ' + str(faceDetection['Face']['Confidence']))
+                print('Timestamp: ' + str(faceDetection['Timestamp']))
+                print()
+
+            if 'NextToken' in response:
+                paginationToken = response['NextToken']
+            else:
+                finished = True
+
 
 def main():
     roleArn = '' # 입력
@@ -204,9 +242,9 @@ def main():
     analyzer = VideoDetect(roleArn, bucket, video)
     analyzer.CreateTopicandQueue()
 
-    analyzer.StartLabelDetection()
+    analyzer.StartFaceDetection()
     if analyzer.GetSQSMessageSuccess() == True:
-        analyzer.GetLabelDetectionResults()
+        analyzer.GetFaceDetectionResults()
 
     analyzer.DeleteTopicandQueue()
 
