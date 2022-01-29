@@ -201,7 +201,8 @@ class VideoDetect:
     # ============== Faces===============
     def StartFaceDetection(self):
         response=self.rek.start_face_detection(Video={'S3Object': {'Bucket': self.bucket, 'Name': self.video}},
-            NotificationChannel={'RoleArn': self.roleArn, 'SNSTopicArn': self.snsTopicArn})
+            NotificationChannel={'RoleArn': self.roleArn, 'SNSTopicArn': self.snsTopicArn},
+            FaceAttributes='ALL') # Emotions 포함시키기 위해 FaceAttributes 설정
 
         self.startJobId=response['JobId']
         print('Start Job Id: ' + self.startJobId)
@@ -225,6 +226,9 @@ class VideoDetect:
             for faceDetection in response['Faces']:
                 print('Face: ' + str(faceDetection['Face']))
                 print('Confidence: ' + str(faceDetection['Face']['Confidence']))
+
+                print('Emotions : ' + str(faceDetection['Face']['Emotions']))
+
                 print('Timestamp: ' + str(faceDetection['Timestamp']))
                 print()
 
